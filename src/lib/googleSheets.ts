@@ -1,108 +1,51 @@
-import { google } from "googleapis";
-import { JWT } from "google-auth-library";
-
 export interface LeaderboardEntry {
   id?: string;
   rank?: number;
   name: string;
   score: number;
+  maxPoints: number;
+  percentage: number;
+  status: string;
   avatar_url?: string;
   department?: string;
 }
 
 export class GoogleSheetsService {
-  private client: JWT;
-  private sheets: ReturnType<typeof google.sheets>;
-  private spreadsheetId: string;
+  private apiUrl: string;
 
   constructor() {
-    console.log("Initializing GoogleSheetsService");
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-    // Check if environment variables are properly set
-    const email = import.meta.env.VITE_GOOGLE_SERVICE_ACCOUNT_EMAIL;
-    const key = import.meta.env.VITE_GOOGLE_PRIVATE_KEY;
-    const spreadsheetId = import.meta.env.VITE_GOOGLE_SPREADSHEET_ID;
-
-    console.log("Environment variables:", {
-      hasEmail: !!email,
-      emailValue: email,
-      hasKey: !!key,
-      keyLength: key?.length,
-      hasSpreadsheetId: !!spreadsheetId,
-      spreadsheetIdValue: spreadsheetId,
-    });
-
-    if (!email || !key || !spreadsheetId) {
-      const missing = [];
-      if (!email) missing.push("VITE_GOOGLE_SERVICE_ACCOUNT_EMAIL");
-      if (!key) missing.push("VITE_GOOGLE_PRIVATE_KEY");
-      if (!spreadsheetId) missing.push("VITE_GOOGLE_SPREADSHEET_ID");
-      throw new Error(
-        `Missing required environment variables: ${missing.join(", ")}`
-      );
+    if (!supabaseUrl || !anonKey) {
+      throw new Error("Missing Supabase environment variables");
     }
 
-    try {
-      // Clean up the private key - ensure proper line breaks
-      const cleanKey = key.replace(/\\n/g, "\n").replace(/["']/g, "").trim();
-
-      this.client = new JWT({
-        email,
-        key: cleanKey,
-        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-      });
-
-      this.sheets = google.sheets({ version: "v4", auth: this.client });
-      this.spreadsheetId = spreadsheetId;
-
-      console.log("GoogleSheetsService initialized successfully");
-    } catch (error) {
-      console.error("Error initializing GoogleSheetsService:", error);
-      throw error;
-    }
+    this.apiUrl = `${supabaseUrl}/functions/v1/get-leaderboard`;
   }
 
   async getLeaderboardData(): Promise<LeaderboardEntry[]> {
     try {
-      console.log("Fetching leaderboard data...");
-
-      const response = await this.sheets.spreadsheets.values.get({
-        spreadsheetId: this.spreadsheetId,
-        range: "A2:D", // Get Name, Score, Avatar URL, Department
+      const response = await fetch(this.apiUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
-      console.log("Raw response:", response.data);
-
-      const rows = response.data.values;
-      if (!rows || rows.length === 0) {
-        console.log("No data found in spreadsheet");
-        return [];
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const entries: LeaderboardEntry[] = rows.map(
-        (row: string[], index: number) => {
-          console.log(`Processing row ${index + 1}:`, row);
-          return {
-            id: `entry-${index + 1}`,
-            name: row[0] || "",
-            score: parseInt(row[1]) || 0,
-            avatar_url: row[2] || undefined,
-            department: row[3] || "General",
-          };
-        }
-      );
+      const data = await response.json();
 
-      console.log("Processed entries:", entries);
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
-      // Sort by score in descending order and add ranks
-      return entries
-        .sort((a, b) => b.score - a.score)
-        .map((entry, index) => ({
-          ...entry,
-          rank: index + 1,
-        }));
+      return data.participants || [];
     } catch (error) {
-      console.error("Error fetching data from Google Sheets:", error);
+      console.error("Error fetching data from backend:", error);
       throw error;
     }
   }
@@ -115,7 +58,7 @@ export class GoogleSheetsService {
       } catch (error) {
         console.error("Error in watchForChanges:", error);
       }
-    }, 30000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }

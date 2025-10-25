@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { LeaderboardEntry } from "../lib/googleSheets";
+import ProgressBar from "./ProgressBar";
 
 interface LeaderboardRowProps {
   participant: LeaderboardEntry;
@@ -18,72 +19,90 @@ export default function LeaderboardRow({
   const getRankBadge = (rank: number) => {
     if (rank <= 3) {
       const colors = {
-        1: "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white",
-        2: "bg-gradient-to-br from-gray-300 to-gray-500 text-white",
-        3: "bg-gradient-to-br from-amber-500 to-amber-700 text-white",
+        1: "bg-gradient-to-br from-[#FFD700] to-[#FFA500] text-white shadow-lg",
+        2: "bg-gradient-to-br from-[#C0C0C0] to-[#A8A8A8] text-white shadow-lg",
+        3: "bg-gradient-to-br from-[#CD7F32] to-[#B8722A] text-white shadow-lg",
       };
       return colors[rank as keyof typeof colors];
     }
-    return "bg-[#F0F8FC] text-[#0A5394]";
+    return "bg-[#2D2D44] text-[#30CDB7] border-2 border-[#498099]";
+  };
+
+  const getStatusBadge = () => {
+    const statusStyles = {
+      active: 'bg-[#00C896] text-white',
+      completed: 'bg-[#30CDB7] text-white',
+      'at risk': 'bg-[#FF8C42] text-white',
+      failed: 'bg-[#FF4757] text-white',
+    };
+
+    const status = participant.status?.toLowerCase() || 'active';
+    return statusStyles[status as keyof typeof statusStyles] || statusStyles.active;
   };
 
   return (
     <div
-      className="bg-white rounded-lg shadow-md p-4 mb-3 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border border-transparent hover:border-[#0A5394]"
+      className="glassmorphism rounded-xl p-5 mb-3 transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] hover:border-[#852467] group"
       style={{
         animation: rankChange !== 0 ? "slideIn 0.5s ease-out" : undefined,
       }}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-4">
         <div
-          className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${getRankBadge(
+          className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center font-bold text-xl ${getRankBadge(
             participant.rank || index + 4
           )}`}
         >
           {participant.rank || index + 4}
         </div>
 
-        <div className="flex-grow min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-lg font-bold text-[#012654] truncate">
-              {participant.name}
-            </h3>
-            {rankChange !== 0 && (
-              <div
-                className={`flex items-center gap-1 text-xs font-semibold ${
-                  rankChange > 0 ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {rankChange > 0 ? (
-                  <>
-                    <TrendingUp className="w-4 h-4" />
-                    <span>+{rankChange}</span>
-                  </>
-                ) : (
-                  <>
-                    <TrendingDown className="w-4 h-4" />
-                    <span>{rankChange}</span>
-                  </>
-                )}
-              </div>
-            )}
-            {rankChange === 0 && participant.previous_rank && (
-              <Minus className="w-4 h-4 text-[#585458]" />
-            )}
+        <div className="flex-grow min-w-0 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-bold text-[#F7F7FA] truncate">
+                {participant.name}
+              </h3>
+              {rankChange !== 0 && (
+                <div
+                  className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${
+                    rankChange > 0 ? "bg-[#00C896]/20 text-[#00C896]" : "bg-[#FF4757]/20 text-[#FF4757]"
+                  }`}
+                >
+                  {rankChange > 0 ? (
+                    <>
+                      <TrendingUp className="w-3 h-3" />
+                      <span>+{rankChange}</span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingDown className="w-3 h-3" />
+                      <span>{rankChange}</span>
+                    </>
+                  )}
+                </div>
+              )}
+              {rankChange === 0 && participant.previous_rank && (
+                <Minus className="w-4 h-4 text-[#E8E8EE]" />
+              )}
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge()}`}>
+              {participant.status || 'Active'}
+            </span>
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-[#585458]">
+          <div className="flex items-center gap-4 text-sm text-[#E8E8EE]">
             {participant.department && (
-              <span className="truncate">{participant.department}</span>
+              <span className="px-2 py-1 bg-[#498099]/20 text-[#30CDB7] rounded-md font-medium">
+                {participant.department}
+              </span>
             )}
           </div>
-        </div>
 
-        <div className="flex-shrink-0 text-right">
-          <div className="text-3xl font-bold bg-gradient-to-r from-[#0A5394] to-[#012654] bg-clip-text text-transparent">
-            {participant.score}
-          </div>
-          <div className="text-xs text-[#585458]">points</div>
+          <ProgressBar
+            current={participant.score}
+            max={participant.maxPoints}
+            rank={participant.rank || index + 4}
+          />
         </div>
       </div>
     </div>

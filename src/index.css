@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-[#1A1A2E] text-[#F7F7FA];
+  }
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -36,4 +42,19 @@
     transform: scale(2);
     opacity: 0;
   }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.glassmorphism {
+  background: rgba(45, 45, 68, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(232, 232, 238, 0.1);
 }

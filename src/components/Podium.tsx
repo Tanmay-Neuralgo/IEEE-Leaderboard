@@ -1,5 +1,6 @@
 import { Trophy, Medal } from "lucide-react";
 import { LeaderboardEntry } from "../lib/googleSheets";
+import ProgressBar from "./ProgressBar";
 
 interface PodiumProps {
   topThree: LeaderboardEntry[];
@@ -12,84 +13,81 @@ export default function Podium({ topThree }: PodiumProps) {
     participant,
     position,
     height,
-    bgGradient,
   }: {
     participant?: LeaderboardEntry;
     position: number;
     height: string;
-    bgGradient: string;
   }) => {
     if (!participant) return null;
 
     const medals = {
-      1: { icon: Trophy, color: "text-yellow-400", label: "CHAMPION" },
-      2: { icon: Medal, color: "text-gray-300", label: "RUNNER-UP" },
-      3: { icon: Medal, color: "text-amber-600", label: "THIRD PLACE" },
+      1: { icon: Trophy, color: "text-[#FFD700]", label: "CHAMPION", gradient: "from-[#3B0855] via-[#EE2270] to-[#FD8083]" },
+      2: { icon: Medal, color: "text-[#C0C0C0]", label: "RUNNER-UP", gradient: "from-[#852467] to-[#498099]" },
+      3: { icon: Medal, color: "text-[#CD7F32]", label: "THIRD PLACE", gradient: "from-[#498099] to-[#30CDB7]" },
     };
 
     const medal = medals[position as keyof typeof medals];
     const Icon = medal.icon;
 
+    const podiumGradients = {
+      1: "from-[#FFD700] to-[#FFA500]",
+      2: "from-[#C0C0C0] to-[#A8A8A8]",
+      3: "from-[#CD7F32] to-[#B8722A]",
+    };
+
     return (
       <div className="flex flex-col items-center">
-        <div
-          className={`relative bg-white rounded-2xl shadow-lg p-6 w-full max-w-xs transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ${bgGradient}`}
-        >
-          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+        <div className="glassmorphism relative rounded-2xl shadow-2xl p-6 w-full max-w-xs transition-all duration-500 hover:shadow-[0_0_30px_rgba(48,205,183,0.3)] hover:-translate-y-3">
+          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
             <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                position === 1
-                  ? "bg-gradient-to-br from-yellow-300 to-yellow-500"
-                  : position === 2
-                  ? "bg-gradient-to-br from-gray-200 to-gray-400"
-                  : "bg-gradient-to-br from-amber-400 to-amber-600"
-              } shadow-lg animate-pulse`}
+              className={`w-20 h-20 rounded-full flex items-center justify-center bg-gradient-to-br ${podiumGradients[position as keyof typeof podiumGradients]} shadow-2xl animate-pulse`}
             >
-              <Icon className={`w-8 h-8 ${medal.color}`} />
+              <Icon className={`w-10 h-10 ${medal.color}`} />
             </div>
           </div>
 
-          <div className="mt-6 text-center">
-            <div className="text-sm font-semibold text-[#585458] mb-1">
+          <div className="mt-8 text-center">
+            <div className={`text-xs font-bold text-[#30CDB7] mb-2 tracking-wider`}>
               {medal.label}
             </div>
-            <h3 className="text-xl font-bold text-[#012654] mb-2 truncate">
+            <h3 className="text-2xl font-bold text-[#F7F7FA] mb-4 truncate">
               {participant.name}
             </h3>
 
-            <div className="my-4 py-4 px-6 bg-gradient-to-r from-[#0A5394] to-[#012654] rounded-lg">
-              <div className="text-3xl font-bold text-white">
-                {participant.score}
+            <div className={`my-4 py-5 px-6 bg-gradient-to-r ${medal.gradient} rounded-xl shadow-lg relative overflow-hidden`}>
+              <div className="absolute inset-0 bg-white/10"></div>
+              <div className="relative">
+                <div className="text-4xl font-bold text-white">
+                  {participant.score}
+                </div>
+                <div className="text-xs text-white/80 mt-1">POINTS</div>
               </div>
-              <div className="text-xs text-[#F0F8FC] mt-1">POINTS</div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              {participant.time_taken && (
-                <div className="bg-[#F0F8FC] rounded-lg p-2">
-                  <div className="text-xs text-[#585458]">Time</div>
-                  <div className="text-sm font-semibold text-[#0A5394]">
-                    {Math.floor(participant.time_taken / 60)}:
-                    {(participant.time_taken % 60).toString().padStart(2, "0")}
-                  </div>
-                </div>
-              )}
-              {participant.department && (
-                <div className="bg-[#F0F8FC] rounded-lg p-2">
-                  <div className="text-xs text-[#585458]">Dept</div>
-                  <div className="text-sm font-semibold text-[#0A5394] truncate">
-                    {participant.department}
-                  </div>
-                </div>
-              )}
+            <div className="mb-4">
+              <ProgressBar
+                current={participant.score}
+                max={participant.maxPoints}
+                rank={position}
+              />
             </div>
+
+            {participant.department && (
+              <div className="bg-[#498099]/20 rounded-lg p-3">
+                <div className="text-xs text-[#E8E8EE]">Department</div>
+                <div className="text-sm font-semibold text-[#30CDB7] truncate">
+                  {participant.department}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         <div
-          className={`mt-4 ${height} w-32 bg-gradient-to-t ${bgGradient} rounded-t-xl shadow-inner flex items-center justify-center`}
+          className={`mt-6 ${height} w-36 bg-gradient-to-t ${podiumGradients[position as keyof typeof podiumGradients]} rounded-t-2xl shadow-2xl flex items-center justify-center relative overflow-hidden`}
         >
-          <span className="text-5xl font-bold text-white opacity-30">
+          <div className="absolute inset-0 bg-white/10"></div>
+          <span className="text-6xl font-bold text-white opacity-40 relative z-10">
             {position}
           </span>
         </div>
@@ -98,13 +96,12 @@ export default function Podium({ topThree }: PodiumProps) {
   };
 
   return (
-    <div className="flex items-end justify-center gap-8 mb-12 flex-wrap lg:flex-nowrap">
+    <div className="flex items-end justify-center gap-8 mb-16 flex-wrap lg:flex-nowrap px-4">
       <div className="order-2 lg:order-1">
         <PodiumCard
           participant={second}
           position={2}
-          height="h-32"
-          bgGradient="from-gray-50 to-gray-100"
+          height="h-36"
         />
       </div>
 
@@ -112,8 +109,7 @@ export default function Podium({ topThree }: PodiumProps) {
         <PodiumCard
           participant={first}
           position={1}
-          height="h-48"
-          bgGradient="from-yellow-50 to-amber-50"
+          height="h-52"
         />
       </div>
 
@@ -121,8 +117,7 @@ export default function Podium({ topThree }: PodiumProps) {
         <PodiumCard
           participant={third}
           position={3}
-          height="h-24"
-          bgGradient="from-orange-50 to-amber-50"
+          height="h-28"
         />
       </div>
     </div>

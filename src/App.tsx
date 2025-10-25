@@ -95,7 +95,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F0F8FC] to-white py-8 px-4">
+      <div className="min-h-screen bg-[#1A1A2E] py-8 px-4">
         <div className="max-w-7xl mx-auto">
           <LoadingSkeleton />
         </div>
@@ -104,18 +104,25 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F0F8FC] to-white py-8 px-4">
+    <div className="min-h-screen bg-[#1A1A2E] py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          <div className="glassmorphism border-2 border-[#FF4757] text-[#FF4757] px-6 py-4 rounded-xl mb-6 shadow-lg">
             <strong className="font-bold">Error: </strong>
             <span className="block sm:inline">{error}</span>
+            <button
+              onClick={fetchParticipants}
+              className="mt-3 px-4 py-2 bg-[#FF4757] text-white rounded-lg hover:bg-[#FF4757]/80 transition-colors font-semibold"
+            >
+              Retry
+            </button>
           </div>
         )}
         <Header
           lastUpdated={lastUpdated}
           isOnline={isOnline}
           totalParticipants={participants.length}
+          onRefresh={fetchParticipants}
         />
 
         <SearchBar
@@ -127,8 +134,9 @@ function App() {
         />
 
         {filteredParticipants.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-2xl text-[#585458]">No participants found</p>
+          <div className="glassmorphism text-center py-16 rounded-2xl">
+            <p className="text-2xl text-[#E8E8EE]">No participants found</p>
+            <p className="text-sm text-[#E8E8EE]/60 mt-2">Try adjusting your search or filters</p>
           </div>
         ) : (
           <>
@@ -136,9 +144,14 @@ function App() {
 
             {remaining.length > 0 && (
               <div className="mt-8">
-                <h2 className="text-2xl font-bold text-[#012654] mb-6 px-2">
-                  Full Rankings
-                </h2>
+                <div className="flex items-center justify-between mb-6 px-2">
+                  <h2 className="text-3xl font-bold text-[#F7F7FA]">
+                    Full Rankings
+                  </h2>
+                  <div className="text-sm text-[#E8E8EE]/60">
+                    {remaining.length} participants
+                  </div>
+                </div>
                 <div className="space-y-3">
                   {remaining.map((participant, index) => (
                     <LeaderboardRow
